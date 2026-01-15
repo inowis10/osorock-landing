@@ -66,7 +66,11 @@ body {
   flex: 1;
   padding: 3rem;
   border-radius: 24px 0 0 24px;
-  /* Matches main-card left side */
+  position: relative;
+  z-index: 10;
+  background: rgba(15, 23, 42, 0.2);
+  backdrop-filter: blur(10px);
+  /* Shield against background glow bleeding */
 }
 
 .image-section {
@@ -81,6 +85,32 @@ body {
   position: relative;
   border-radius: 0 24px 24px 0;
   z-index: 1;
+}
+
+.image-bg-effects {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 0 24px 24px 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.character-halo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120%;
+  height: 120%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.2) 0%, rgba(168, 85, 247, 0.1) 40%, transparent 70%);
+  border-radius: 50%;
+  z-index: -1;
+  animation: haloBreathe 8s ease-in-out infinite;
+  filter: blur(50px);
 }
 
 .social-section {
@@ -309,53 +339,58 @@ body {
 
 .input-group input {
   width: 100%;
-  padding: 1rem;
-  background: var(--input-bg);
-  border: 1px solid var(--input-border);
-  border-radius: 12px;
+  padding: 0.8rem 1.2rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
   color: white;
   font-size: 1rem;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  backdrop-filter: blur(5px);
 }
 
 .input-group input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.35);
+  transition: all 0.3s ease;
 }
 
 .input-group input:focus {
   outline: none;
-  border-color: var(--primary-color);
-  background: rgba(0, 0, 0, 0.4);
-  box-shadow: 0 0 0 4px rgba(100, 108, 255, 0.2);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: #00f2ea;
+  box-shadow:
+    0 0 0 1px #00f2ea,
+    0 0 15px rgba(0, 242, 234, 0.3);
+  transform: translateY(-1px);
+}
+
+.input-group input:focus::placeholder {
+  opacity: 0;
+  transform: translateX(10px);
 }
 
 .submit-btn {
   width: 100%;
   padding: 1rem;
-  background: linear-gradient(135deg, #646cff 0%, #535bf2 100%);
-  /* Subtle gradient */
+  background: linear-gradient(270deg, #646cff, #a855f7, #646cff);
+  background-size: 200% 200%;
   color: white;
   border: none;
   border-radius: 12px;
   font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   position: relative;
   overflow: hidden;
+  animation: gradientFlow 6s ease infinite, buttonBeat 3s ease-in-out infinite;
 }
 
 .submit-btn:hover {
-  background: linear-gradient(135deg, #535bf2 0%, #4248d6 100%);
-  /* Darker gradient on hover */
   transform: translateY(-3px) scale(1.02);
-  /* Lift and slight scale */
-  box-shadow: 0 8px 20px rgba(100, 108, 255, 0.6), 0 0 30px rgba(100, 108, 255, 0.4);
-  /* Enhanced glow */
-  animation: none;
-  /* Remove pulse-glow on hover to avoid conflict */
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4), 0 0 20px rgba(100, 108, 255, 0.3);
+  background-position: right center;
 }
 
 .submit-btn:disabled,
@@ -465,6 +500,46 @@ body {
   text-align: center;
   margin-top: 1rem;
   line-height: 1.4;
+}
+
+@keyframes haloBreathe {
+
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0.5;
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes buttonBeat {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.03);
+  }
 }
 
 @keyframes fadeInUp {
