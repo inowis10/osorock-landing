@@ -63,7 +63,7 @@ function App() {
               <img src="/logos.png" alt="Contáctanos" className="form-header-image" />
               <p className="form-description">
                 Te invitamos a vivir una experiencia exclusiva con sorpresas y contenido especial. <br /><br />
-                <strong>Completa este formulario y recibe gratis un pack de stickers de Dr. Simi</strong>
+                <strong>Completa este formulario y recibe gratis un 🎁 <span className="highlight">pack de stickers de Dr. Simi</span> ✨</strong>
               </p>
             </div>
 
@@ -140,7 +140,7 @@ function App() {
                 className={`submit-btn ${status === 'submitting' ? 'loading' : ''}`}
                 disabled={status === 'submitting'}
               >
-                {status === 'submitting' ? 'Enviando...' : 'Enviar'}
+                {status === 'submitting' ? 'Enviando...' : 'Quiero mis stickers 🎸'}
               </button>
 
               <p className="privacy-text">
