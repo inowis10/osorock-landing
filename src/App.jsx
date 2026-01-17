@@ -10,6 +10,13 @@ function App() {
     newsletter: false,
     website: '' // Honeypot field (must stay empty)
   })
+
+  // Track which fields have been touched by the user
+  const [touched, setTouched] = useState({
+    name: false,
+    phone: false,
+    email: false
+  })
   const [status, setStatus] = useState('idle') // idle, submitting, success, error
 
   const handleChange = (e) => {
@@ -18,11 +25,36 @@ function App() {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }))
+
+    // Mark field as touched when the user starts typing
+    if (!touched[name] && type !== 'checkbox') {
+      setTouched(prev => ({ ...prev, [name]: true }))
+    }
+  }
+
+  // Simple validation logic
+  const validateField = (name, value) => {
+    if (!touched[name]) return null; // Don't show validation if not touched yet
+    if (!value || value.trim() === '') return false;
+
+    switch (name) {
+      case 'name':
+        return value.trim().length > 2;
+      case 'email':
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+      case 'phone':
+        return /^(\+56|0|)?\d{9}$/.test(value.replace(/\s/g, ''));
+      default:
+        return true;
+    }
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setStatus('submitting')
+
+    // Mark all fields as touched on submit
+    setTouched({ name: true, phone: true, email: true })
 
     // Honeypot check
     if (formData.website !== '') {
@@ -31,14 +63,13 @@ function App() {
       return
     }
 
-    const WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL
+    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001/api/leads'
 
     try {
-      const response = await fetch(WEBHOOK_URL, {
+      const response = await fetch(BACKEND_URL, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'X-Simi-Key': import.meta.env.VITE_SIMI_SECRET_KEY
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           name: formData.name.trim(),
@@ -46,21 +77,23 @@ function App() {
           email: formData.email.trim().toLowerCase(),
           terms: formData.terms,
           newsletter: formData.newsletter,
-          submittedAt: new Date().toISOString()
+          turnstileToken: 'manual-token-placeholder' // Placeholder for now
         }),
       })
 
       if (response.ok) {
         setStatus('success')
-        setFormData({ name: '', phone: '', email: '' })
-        alert('¡Genial! Tus datos fueron enviados. Revisa tu WhatsApp en unos segundos. 🚀')
+        setFormData({ name: '', phone: '', email: '', terms: false, newsletter: false, website: '' })
+        setTouched({ name: false, phone: false, email: false })
       } else {
-        throw new Error('Error en el servidor')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Error en el servidor')
       }
     } catch (error) {
       console.error('Error al enviar:', error)
       setStatus('error')
-      alert('Hubo un error al enviar. Por favor, intenta nuevamente.')
+      // Solo dejamos esta alerta para errores críticos, pero lo ideal sería una UI de error también
+      alert(`Hubo un error al enviar: ${error.message}`)
     }
   }
 
@@ -69,111 +102,142 @@ function App() {
       <div className="background-image"></div>
 
       <main className="content centered-layout">
-        <div className="main-card glass-effect">
+        <div className={`main-card glass-effect ${status === 'success' ? 'is-success' : ''}`}>
           <div className="form-section">
-            <div className="form-header">
-              <img src="/logos.png" alt="Contáctanos" className="form-header-image" />
-              <p className="form-description">
-                Te invitamos a vivir una experiencia exclusiva con sorpresas y contenido especial. <br /><br />
-                <strong>Completa este formulario y recibe gratis un 🎁 <span className="highlight">pack de stickers de Dr. Simi</span> ✨</strong>
-              </p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="contact-form">
-              <div className="input-group">
-                <label htmlFor="name">Nombre</label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="Tu nombre completo"
-                  required
-                  disabled={status === 'submitting'}
-                />
+            {status === 'success' ? (
+              <div className="success-container">
+                <div className="success-icon-wrapper">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <h2 className="success-title">¡Enviado! 🚀</h2>
+                <p className="success-message">
+                  Tus datos están seguros. Revisa tu WhatsApp en unos segundos para recibir tu pack de stickers.
+                </p>
+                <button
+                  className="continue-btn"
+                  onClick={() => {
+                    setStatus('idle')
+                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                  }}
+                >
+                  Volver al formulario
+                </button>
               </div>
+            ) : (
+              <>
+                <div className="form-header">
+                  <img src="/logos.png" alt="Contáctanos" className="form-header-image" />
+                  <p className="form-description">
+                    Te invitamos a vivir una experiencia exclusiva con sorpresas y contenido especial. <br /><br />
+                    <strong>Completa este formulario y recibe gratis un 🎁 <span className="highlight">pack de stickers de Dr. Simi</span> ✨</strong>
+                  </p>
+                </div>
 
-              <div className="input-group">
-                <label htmlFor="phone">Teléfono</label>
-                <input
-                  type="tel"
-                  id="phone"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder="+56 9 1234 5678"
-                  required
-                  pattern="(\+56|0|)?\d{9}"
-                  title="Ingresa un número válido de 9 dígitos (ej: 912345678 o +56912345678)"
-                  disabled={status === 'submitting'}
-                />
-              </div>
+                <form onSubmit={handleSubmit} className="contact-form">
+                  <div className="input-group">
+                    <label htmlFor="name">Nombre</label>
+                    <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      placeholder="Tu nombre completo"
+                      required
+                      disabled={status === 'submitting'}
+                      className={validateField('name', formData.name) === true ? 'is-valid' : validateField('name', formData.name) === false ? 'is-invalid' : ''}
+                    />
+                  </div>
 
-              <div className="input-group">
-                <label htmlFor="email">Correo</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="ejemplo@correo.com"
-                  required
-                  pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$"
-                  disabled={status === 'submitting'}
-                />
-              </div>
+                  <div className="input-group">
+                    <label htmlFor="phone">Teléfono</label>
+                    <input
+                      type="tel"
+                      id="phone"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      placeholder="+56 9 1234 5678"
+                      required
+                      pattern="(\+56|0|)?\d{9}"
+                      title="Ingresa un número válido de 9 dígitos (ej: 912345678 o +56912345678)"
+                      disabled={status === 'submitting'}
+                      className={validateField('phone', formData.phone) === true ? 'is-valid' : validateField('phone', formData.phone) === false ? 'is-invalid' : ''}
+                    />
+                  </div>
 
-              {/* Honeypot field (invisible to humans) */}
-              <div className="hp-field" style={{ display: 'none' }}>
-                <input
-                  type="text"
-                  name="website"
-                  value={formData.website}
-                  onChange={handleChange}
-                  tabIndex="-1"
-                  autoComplete="off"
-                />
-              </div>
+                  <div className="input-group">
+                    <label htmlFor="email">Correo</label>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="ejemplo@correo.com"
+                      required
+                      pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$"
+                      disabled={status === 'submitting'}
+                      className={validateField('email', formData.email) === true ? 'is-valid' : validateField('email', formData.email) === false ? 'is-invalid' : ''}
+                    />
+                  </div>
 
-              <div className="checkbox-group">
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    name="terms"
-                    checked={formData.terms}
-                    onChange={handleChange}
-                    required
-                  />
-                  <span>
-                    Acepto <a href="#" className="link">Políticas de Privacidad</a> y <a href="#" className="link">Términos y Condiciones</a>
-                  </span>
-                </label>
+                  {/* Honeypot field (invisible to humans) */}
+                  <div className="hp-field" style={{ display: 'none' }}>
+                    <input
+                      type="text"
+                      name="website"
+                      value={formData.website}
+                      onChange={handleChange}
+                      tabIndex="-1"
+                      autoComplete="off"
+                    />
+                  </div>
 
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    name="newsletter"
-                    checked={formData.newsletter}
-                    onChange={handleChange}
-                  />
-                  <span>Quiero recibir el newsletter con promociones.</span>
-                </label>
-              </div>
+                  <div className="checkbox-group">
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        name="terms"
+                        checked={formData.terms}
+                        onChange={handleChange}
+                        required
+                      />
+                      <span>
+                        Acepto <a href="#" className="link">Políticas de Privacidad</a> y <a href="#" className="link">Términos y Condiciones</a>
+                      </span>
+                    </label>
 
-              <button
-                type="submit"
-                className={`submit-btn ${status === 'submitting' ? 'loading' : ''}`}
-                disabled={status === 'submitting'}
-              >
-                {status === 'submitting' ? 'Enviando...' : 'Quiero mis stickers 🎸'}
-              </button>
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        name="newsletter"
+                        checked={formData.newsletter}
+                        onChange={handleChange}
+                      />
+                      <span>Quiero recibir el newsletter con promociones.</span>
+                    </label>
+                  </div>
 
-              <p className="privacy-text">
-                Los datos están protegidos y serán utilizados de forma segura para los fines indicados.
-              </p>
-            </form>
+                  <button
+                    type="submit"
+                    className={`submit-btn ${status === 'submitting' ? 'loading' : ''}`}
+                    disabled={status === 'submitting'}
+                  >
+                    {status === 'submitting' ? (
+                      <>
+                        <div className="spinner"></div>
+                        Enviando...
+                      </>
+                    ) : 'Quiero mis stickers 🎸'}
+                  </button>
+
+                  <p className="privacy-text">
+                    Los datos están protegidos y serán utilizados de forma segura para los fines indicados.
+                  </p>
+                </form>
+              </>
+            )}
           </div>
 
           <div className="image-section">

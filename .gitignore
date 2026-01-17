@@ -23,3 +23,9 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Project Logs
+full_log.txt
+log.txt
+log_clean.txt
+
