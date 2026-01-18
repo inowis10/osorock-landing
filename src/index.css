@@ -16,6 +16,8 @@
 }
 
 body {
+  background-color: #0f172a;
+  /* Match dark theme to prevent white flashes */
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   color: var(--text-color);
   min-height: 100vh;
@@ -37,10 +39,14 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: url('/background.png');
+  background-color: #0f172a;
+  /* Fallback color */
+  background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('/background.webp');
   background-size: cover;
   background-position: center;
+  background-attachment: fixed;
   z-index: -2;
+  will-change: transform;
 }
 
 .content.centered-layout {
@@ -68,9 +74,10 @@ body {
   border-radius: 24px 0 0 24px;
   position: relative;
   z-index: 10;
-  background: rgba(15, 23, 42, 0.2);
-  backdrop-filter: blur(10px);
-  /* Shield against background glow bleeding */
+  background: rgba(15, 23, 42, 0.3);
+  backdrop-filter: blur(8px);
+  /* Reduced from 10px */
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .image-section {
@@ -99,6 +106,7 @@ body {
   z-index: 0;
 }
 
+/* Reduced halo size and opacity for mobile */
 .character-halo {
   position: absolute;
   top: 50%;
@@ -257,22 +265,19 @@ body {
 }
 
 .decorative-image {
-  width: 135%;
-  /* Increased size */
+  width: 140%;
+  max-width: none;
   height: auto;
+  max-height: 120%;
+  /* Increased for larger character feel */
   object-fit: contain;
   animation: float 5s ease-in-out infinite;
-  /* Slower, more natural */
   filter:
-    drop-shadow(0 15px 30px rgba(0, 0, 0, 0.4))
-    /* Main soft shadow */
-    drop-shadow(0 0 25px rgba(100, 108, 255, 0.3))
-    /* Soft purple aura */
-    drop-shadow(0 0 50px rgba(0, 255, 255, 0.15));
-  /* Soft cyan aura */
+    drop-shadow(0 15px 35px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 25px rgba(0, 242, 234, 0.3)) drop-shadow(0 0 60px rgba(0, 242, 234, 0.15));
   transform: translateY(0);
   z-index: 10;
   transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
 }
 
 .is-success .decorative-image {
@@ -284,13 +289,14 @@ body {
 
 .glass-effect {
   background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(8px);
+  /* Reduced from 16px */
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--glass-border);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  /* Added specific rounding to match children if overflow is visible elsewhere */
   border-radius: 24px;
+  will-change: transform;
 }
 
 .form-header {
@@ -354,7 +360,8 @@ body {
   color: white;
   font-size: 1rem;
   transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.4);
 }
 
 .input-group input::placeholder {
@@ -514,16 +521,15 @@ body {
 
 @keyframes float {
   0% {
-    transform: translateY(0px) rotate(0deg);
+    transform: translate3d(0, 0, 0) rotate(0deg);
   }
 
   50% {
-    transform: translateY(-25px) rotate(1deg);
-    /* Slightly more movement */
+    transform: translate3d(0, -15px, 0) rotate(1deg);
   }
 
   100% {
-    transform: translateY(0px) rotate(0deg);
+    transform: translate3d(0, 0, 0) rotate(0deg);
   }
 }
 
@@ -645,7 +651,8 @@ body {
     /* Lighter bg on mobile */
     border-radius: 24px 24px 0 0;
     /* Top corners only on mobile */
-    margin-bottom: 2rem;
+    margin-bottom: 0;
+    /* Removed gap to connect with form */
   }
 
   .social-section {
@@ -653,10 +660,18 @@ body {
     bottom: 0;
     left: 0;
     width: 100%;
-    margin-top: 1rem;
+    margin-top: 0;
+    /* Removed gap to connect with form */
     padding-bottom: 2.5rem;
-    background: rgba(0, 0, 0, 0.1);
+    padding-top: 1rem;
+    /* Added padding to separate from form content */
+    background: rgba(15, 23, 42, 0.4);
+    /* Match form background */
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     border-radius: 0 0 24px 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    /* Subtle separator */
   }
 
   .social-title {
@@ -684,18 +699,40 @@ body {
     height: 18px;
   }
 
+  /* Reduced halo for mobile */
+  .character-halo {
+    width: 100%;
+    height: 100%;
+    opacity: 0.4;
+  }
+
+  .background-image {
+    background-attachment: scroll;
+    /* Disabling fixed background on mobile for better performance */
+  }
+
+  .glass-effect {
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+    border: none;
+  }
+
   .decorative-image {
-    width: 85%;
-    /* Reduced on mobile to prevent overlap */
-    max-height: 100%;
-    /* Keep float animation but maybe subtle? It's fine as is. */
+    width: 90%;
+    max-height: 350px;
+    margin-top: -20px;
+    filter: none;
   }
 
   .form-section {
     padding: 1.5rem;
-    /* Reduce padding to give more space to content */
-    border-radius: 0 0 24px 24px;
-    /* Bottom corners only on mobile */
+    border-radius: 0;
+    /* Square borders to connect image top and social bottom */
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
   }
 
   .form-header-image {

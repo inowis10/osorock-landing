@@ -8,7 +8,13 @@ import CryptoJS from 'crypto-js';
 import axios from 'axios';
 import { sendErrorAlert, sendStartupNotification, sendShutdownNotification } from './utils/notifier.js';
 
-dotenv.config();
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -31,10 +37,24 @@ const limiter = rateLimit({
     legacyHeaders: false,
 });
 
+// Validación de configuración al inicio
+if (!process.env.ENCRYPTION_KEY) {
+    console.error('❌ FATAL: ENCRYPTION_KEY no definida en el archivo .env');
+    process.exit(1);
+}
+
 // Encriptación simple AES-256
 const encryptData = (text) => {
-    if (!text) return '';
-    return CryptoJS.AES.encrypt(text, process.env.ENCRYPTION_KEY).toString();
+    try {
+        if (!text) return '';
+        const key = process.env.ENCRYPTION_KEY;
+        if (!key) throw new Error('Llave de encriptación no configurada');
+
+        return CryptoJS.AES.encrypt(text, key).toString();
+    } catch (error) {
+        console.error('❌ Error en encriptación:', error.message);
+        return 'ERR_ENCRYPTION_FAILED';
+    }
 };
 
 // Endpoint /api/leads
@@ -83,6 +103,7 @@ app.post('/api/leads',
                     email: encryptedEmail,
                     email_plain: email,
                     phone: encryptedPhone,
+                    phone_plain: phone, // 👈 Enviamos versión legible solo para tu Google Sheet
                     newsletter,
                     submittedAt: new Date().toISOString()
                 }, {

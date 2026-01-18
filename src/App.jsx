@@ -126,10 +126,10 @@ function App() {
             ) : (
               <>
                 <div className="form-header">
-                  <img src="/logos.png" alt="Contáctanos" className="form-header-image" />
+                  <img src="/logo zorro.webp" alt="Contáctanos" className="form-header-image" />
                   <p className="form-description">
                     Te invitamos a vivir una experiencia exclusiva con sorpresas y contenido especial. <br /><br />
-                    <strong>Completa este formulario y recibe gratis un 🎁 <span className="highlight">pack de stickers de Dr. Simi</span> ✨</strong>
+                    <strong>Completa este formulario y recibe gratis un 🎁 <span className="highlight">pack de stickers de Zorro</span> ✨</strong>
                   </p>
                 </div>
 
@@ -244,11 +244,11 @@ function App() {
             <div className="image-bg-effects">
               <div className="character-halo"></div>
             </div>
-            <img src="/simirock.png" alt="Decorativa" className="decorative-image" />
+            <img src="/zorro rock.webp" alt="Decorativa" className="decorative-image" />
           </div>
 
           <div className="social-section">
-            <h3 className="social-title">Únete a la comunidad <span className="highlight-brand">Dr. Simi</span> 🤘</h3>
+            <h3 className="social-title">Únete a la comunidad <span className="highlight-brand">Zorro</span> 🤘</h3>
             <p className="social-subtitle">Contenido exclusivo y sorpresas 🎁</p>
             <div className="social-orbs">
               <a href="https://www.instagram.com/drsimichile/" target="_blank" rel="noopener noreferrer" className="orb-link instagram" aria-label="Instagram">
@@ -269,8 +269,8 @@ function App() {
             </div>
           </div>
         </div>
-      </main>
-    </div>
+      </main >
+    </div >
   )
 }
 
