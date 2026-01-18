@@ -6,6 +6,7 @@ import { body, validationResult } from 'express-validator';
 import cors from 'cors';
 import CryptoJS from 'crypto-js';
 import axios from 'axios';
+import { sendErrorAlert, sendStartupNotification, sendShutdownNotification } from './utils/notifier.js';
 
 dotenv.config();
 
@@ -21,11 +22,13 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10kb' })); // Límite de payload
 
-// Rate Limiting: 5 solicitudes por IP cada 10 minutos
+// Rate Limiting: Restaurado con límite alto para pruebas (100 solicitudes cada 10 min)
 const limiter = rateLimit({
     windowMs: 10 * 60 * 1000,
-    max: 5,
-    message: { error: 'Demasiadas solicitudes desde esta IP, por favor intenta más tarde.' }
+    max: 100,
+    message: { error: 'Demasiadas solicitudes desde esta IP, por favor intenta más tarde.' },
+    standardHeaders: true,
+    legacyHeaders: false,
 });
 
 // Encriptación simple AES-256
@@ -73,27 +76,81 @@ app.post('/api/leads',
             const encryptedEmail = encryptData(email);
             const encryptedPhone = encryptData(phone);
 
-            // Enviar a n8n con API Key interna (no expuesta al cliente)
-            const n8nResponse = await axios.post(process.env.N8N_WEBHOOK_URL, {
-                name,
-                email: encryptedEmail,
-                phone: encryptedPhone,
-                newsletter,
-                submittedAt: new Date().toISOString()
-            }, {
-                headers: {
-                    'X-Simi-Key': process.env.N8N_API_KEY
-                }
-            });
+            // Enviar a n8n con manejo de errores para que el servidor no muera si n8n no escucha
+            try {
+                const n8nResponse = await axios.post(process.env.N8N_WEBHOOK_URL, {
+                    name,
+                    email: encryptedEmail,
+                    email_plain: email,
+                    phone: encryptedPhone,
+                    newsletter,
+                    submittedAt: new Date().toISOString()
+                }, {
+                    headers: {
+                        'X-Simi-Key': process.env.N8N_API_KEY
+                    }
+                });
+                console.log(`✅ n8n respondió con status: ${n8nResponse.status}`);
+            } catch (n8nError) {
+                console.error('⚠️ Error avisando a n8n (puede que no esté "escuchando"):', n8nError.message);
+                // No lanzamos el error para que la respuesta al cliente sea exitosa
+            }
+
+            // 🎁 Los stickers se gestionarán en n8n directamente desde el webhook principal
+            // el cual ya incluye name y email_plain.
 
             res.status(200).json({ status: 'success', message: 'Datos recibidos correctamente.' });
         } catch (error) {
-            console.error('Error al procesar el lead:', error.message);
+            console.error('❌ ERROR AL PROCESAR LEAD:', error.message);
+            console.error('STACK:', error.stack);
             res.status(500).json({ error: 'Error interno del servidor.' });
         }
     }
 );
 
-app.listen(PORT, () => {
+// Health check endpoint (para monitoreo)
+app.get('/health', (req, res) => {
+    res.status(200).json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime()
+    });
+});
+
+// Iniciar servidor con notificación
+app.listen(PORT, async () => {
     console.log(`Servidor de seguridad corriendo en puerto ${PORT}`);
+    await sendStartupNotification();
+});
+
+// 🚨 Manejo de errores globales
+process.on('uncaughtException', async (error) => {
+    console.error('💥 Error crítico no capturado:', error);
+    await sendErrorAlert('Error crítico no capturado', {
+        location: 'Global Exception Handler',
+        error: error.message,
+        stack: error.stack
+    });
+    process.exit(1);
+});
+
+process.on('unhandledRejection', async (reason, promise) => {
+    console.error('💥 Promesa rechazada no manejada:', reason);
+    await sendErrorAlert('Promesa rechazada no manejada', {
+        location: 'Global Promise Rejection',
+        error: reason?.message || String(reason)
+    });
+});
+
+// Notificación al detener el servidor
+process.on('SIGTERM', async () => {
+    console.log('SIGTERM recibido, cerrando servidor...');
+    await sendShutdownNotification();
+    process.exit(0);
+});
+
+process.on('SIGINT', async () => {
+    console.log('SIGINT recibido, cerrando servidor...');
+    await sendShutdownNotification();
+    process.exit(0);
 });
