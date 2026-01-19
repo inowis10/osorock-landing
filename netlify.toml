@@ -1,0 +1,5 @@
+[[redirects]]
+  from = "/api/leads"
+  to = "https://nowis1010.app.n8n.cloud/webhook/4722ba07-f4a5-455e-8656-e3a5d8b949f8"
+  status = 200
+  force = true
