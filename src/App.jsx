@@ -126,7 +126,7 @@ function App() {
             ) : (
               <>
                 <div className="form-header">
-                  <img src="/logo zorro.webp" alt="Contáctanos" className="form-header-image" />
+                  <img src="/logo zorro.webp" alt="Contáctanos" className="form-header-image" width="300" height="92" />
                   <p className="form-description">
                     Te invitamos a vivir una experiencia exclusiva con sorpresas y contenido especial. <br /><br />
                     <strong>Completa este formulario y recibe gratis un 🎁 <span className="highlight">pack de stickers de Zorro</span> ✨</strong>
@@ -244,7 +244,7 @@ function App() {
             <div className="image-bg-effects">
               <div className="character-halo"></div>
             </div>
-            <img src="/zorro rock.webp" alt="Decorativa" className="decorative-image" />
+            <img src="/zorro rock.webp" alt="Decorativa" className="decorative-image" width="400" height="500" />
           </div>
 
           <div className="social-section">
