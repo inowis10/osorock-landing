@@ -63,7 +63,7 @@ function App() {
       return
     }
 
-    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001/api/leads'
+    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '/api/leads'
 
     try {
       const response = await fetch(BACKEND_URL, {

@@ -3,3 +3,13 @@
   to = "https://nowis1010.app.n8n.cloud/webhook/4722ba07-f4a5-455e-8656-e3a5d8b949f8"
   status = 200
   force = true
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "upgrade-insecure-requests; default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://nowis1010.app.n8n.cloud;"
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
