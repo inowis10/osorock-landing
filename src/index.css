@@ -752,8 +752,8 @@ body {
   }
 
   .form-header-image {
-    max-height: 60px;
-    /* Smaller logo on mobile */
+    max-height: 80px;
+    /* Increased for better visibility on mobile */
   }
 
   .form-description {
