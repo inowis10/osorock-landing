@@ -74,7 +74,9 @@ function App() {
         body: JSON.stringify({
           name: formData.name.trim(),
           phone: formData.phone.trim(),
+          phone_plain: formData.phone.trim(),
           email: formData.email.trim().toLowerCase(),
+          email_plain: formData.email.trim().toLowerCase(),
           terms: formData.terms,
           newsletter: formData.newsletter,
           turnstileToken: 'manual-token-placeholder' // Placeholder for now
